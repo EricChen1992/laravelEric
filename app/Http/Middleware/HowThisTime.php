@@ -3,7 +3,6 @@
 namespace App\Http\Middleware;
 
 use Closure;
-use Carbon\Carbon;
 
 class HowThisTime
 {
@@ -16,15 +15,11 @@ class HowThisTime
      */
     public function handle($request, Closure $next)
     {
-        $mytime = Carbon::now();
-        // print_r($mytime->minute);
+        $mytime = date('i');
+
+        if($mytime % 2 == 0)
+            abort(403, 'Get out!!!');
         
-        if ($request->age <= 200 && $mytime->minute%2 != 0) {
-            // print_r($mytime->minute%2);
-            return $next($request);
-        } else {
-            abort(403, 'Access denied');
-        }
-        
+        return $next($request);
     }
 }
