@@ -19,3 +19,5 @@ Route::get('/', function () {
 Route::get('/main','IndexController@main');
 
 Route::get('/doshow', 'OddNumberIndexController@showSoming')-> middleware('time');
+
+Route::get('/dosomthing/{decimal}/{math?}', 'BinaryAndHexaDecimal@doSomthing');
