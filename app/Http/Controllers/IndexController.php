@@ -13,4 +13,8 @@ class IndexController extends Controller
     public function main123(){
         return "Eric123";
     }
+
+    public function mainView(){
+        return view('testWelcome',['name' => 'Eric']);
+    }
 }

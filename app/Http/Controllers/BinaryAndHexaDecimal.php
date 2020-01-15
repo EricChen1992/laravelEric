@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\View;
+
 
 class BinaryAndHexaDecimal extends Controller
 {
@@ -27,7 +29,12 @@ class BinaryAndHexaDecimal extends Controller
                 break;
             case '16':
                 return $this->getChange($decimal, $math);
-                break;    
+                break;   
+            case '100':
+                if(View::exists('testWelcome'))
+                    return view('testWelcome',['name' => 'Eric']);
+                // $this->showView();
+                break; 
             default:
                 dump("You enter math is error!!!");
                 break;
@@ -46,6 +53,11 @@ class BinaryAndHexaDecimal extends Controller
     private function getParameters($request){
         $parameters = $request->get('first');
         if ($parameters != null ) dump("First = $parameters");
+    }
+
+    private function showView(){
+        if(View::exists('testWelcome'))
+            return view('testWelcome',['name' => 'Eric']);
     }
 
     private function changeArrayValue(&$arrayValue){

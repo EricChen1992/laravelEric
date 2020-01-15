@@ -11,12 +11,16 @@
 |
 */
 
+
 Route::get('/', function () {
     return view('welcome');
+    // return view('testWelcome',['name' => 'Eric']);
 });
 
 
 Route::get('/main','IndexController@main');
+
+Route::get('/mainshow','IndexController@mainView');
 
 Route::get('/doshow', 'OddNumberIndexController@showSoming')-> middleware('time');
 
