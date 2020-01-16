@@ -29,11 +29,14 @@ class BinaryAndHexaDecimal extends Controller
                 break;
             case '16':
                 return $this->getChange($decimal, $math);
-                break;   
-            case '100':
+                break;
+            case '99':
                 if(View::exists('testWelcome'))
                     return view('testWelcome',['name' => 'Eric']);
-                // $this->showView();
+                    // dd(view('testWelcome',['name' => 'Eric']));
+                break;
+            case '100':
+                return $this->showView();
                 break; 
             default:
                 dump("You enter math is error!!!");
@@ -58,6 +61,7 @@ class BinaryAndHexaDecimal extends Controller
     private function showView(){
         if(View::exists('testWelcome'))
             return view('testWelcome',['name' => 'Eric']);
+            // dd(view('testWelcome',['name' => 'Eric']));
     }
 
     private function changeArrayValue(&$arrayValue){
