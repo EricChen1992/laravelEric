@@ -56,6 +56,10 @@ return [
 
     'asset_url' => env('ASSET_URL', null),
 
+    'cuaUrl' => 'http://cua-new.holmesmind.com/',
+
+    'serviceToken' => 'c83512b88e1dccf7b12828ecdd949ee9',
+
     /*
     |--------------------------------------------------------------------------
     | Application Timezone

@@ -18,3 +18,15 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
 });
 
 Route::get('/main123','IndexController@main123');
+
+Route::post('/worktimein', 'WorkTimeController@workclockin');
+
+Route::post('/worktimeout', 'WorkTimeController@workclockout');
+
+Route::any('/getcua', 'WorkTimeController@getCua');
+
+Route::any('/gettime', 'WorkTimeController@getTime');
+
+Route::any('/getUserAllData', 'WorkTimeController@getUserAllData');
+
+Route::any('/downloadExcel', 'WorkTimeController@downloadExcel');
