@@ -7,7 +7,7 @@ use App\PunchTime;
 
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
-
+use PhpOffice\PhpSpreadsheet\IOFactory;
 class WorkTimeController extends Controller
 {
     public function workclockin(Request $request){
@@ -47,78 +47,44 @@ class WorkTimeController extends Controller
     }
 
     public function downloadExcel(Request $request){
-        // $spreadsheet = new Spreadsheet();//实例化
-        // $spreadsheet->setActiveSheetIndex(0);//设置excel的索引
-        // $sheet=$spreadsheet->getActiveSheet();
-        // /*设置单元格列宽*/
-        // $sheet->getColumnDimension('A')->setWidth(20);
-        // $sheet->getColumnDimension('B')->setWidth(15);
-        // $sheet->getColumnDimension('C')->setAutoSize(true);
-        // /*设置字体大小*/
-        // $sheet->getStyle('A1:c1')->getFont()->setBold(true)->setName('Arial')->setSize(10);
-        // //锁定表头
-        // $sheet->freezePane('A2');
-        // $sheet->setCellValue('A1','答卷时间')
-        //     ->setCellValue('B1','答卷人姓名')
-        //     ->setCellValue('C1','答案文本');
 
-        // $sheet->fromArray($result,null,'A2');
-        // $writer = new Xls($spreadsheet);
-        // $pathUrl = public_path(). '\excel/';
-        // $filePath=$pathUrl.$fileName;
-        // //判断目录是否存在，如果不存在就新建
-        // if(!is_dir($pathUrl))
-        //     mkdir($pathUrl,0755,true);
-
-        // $spreadsheet = new Spreadsheet();
-        // $sheet = $spreadsheet->getActiveSheet();
-        // $sheet->setCellValue('A1', 'Hello World !');
-
-        // $writer = new Xlsx($spreadsheet);
-       
-        // $writer->save('hi world.xlsx');
-
-//#################################################################
-
-        // $spreadSheet = new Spreadsheet();
-        // $workSheet = $spreadSheet->getActiveSheet();
-
-        // Set details for the formula that we want to evaluate, together with any data on which it depends
-        // $workSheet->fromArray(
-        //     [1, 2, 3],//[A,B,C]
-        //     null,//unknow
-        //     'A2'//Start
-        // );
-
-        // $cellC1 = $workSheet->getCell('C2');
-        // echo 'Value: ', $cellC1->getValue(), '; Address: ', $cellC1->getCoordinate(), PHP_EOL;
-
-        // $cellA1 = $workSheet->getCell('A2');
-        // echo 'Value: ', $cellA1->getValue(), '; Address: ', $cellA1->getCoordinate(), PHP_EOL;
-
-        // $writer = new Xlsx($spreadSheet);
-        // $writer->save('TEST_FORMARRAY.xlsx');
-//###################################################################
         $spreadSheet = new Spreadsheet();
         $sheet = $spreadSheet->getActiveSheet();
-        
+        // $spreadsheet->setActiveSheetIndex(1);//設定分頁 0為第一頁
+        $spreadSheet->getActiveSheet()->setTitle('Hello12342536'); //設定分頁名稱
+
         // $sheet -> setAutoSize(true);
-        // $sheet -> freezePane('A2');//起始頭
+        $sheet -> freezePane('A2');//起始頭
         $sheet -> setCellValue('A1', '姓名')//設定A1內容
                -> setCellValue('B1', 'cua_id')//設定B1
-               -> setCellValue('C1', '上班')//設定B1
-               -> setCellValue('D1', "下班");//設定C1
-
-        $timetable_all = PunchTime::select('cua_id','name','time_clock_in','time_clock_out')->get();
+               -> setCellValue('C1', '日期')//設定C1
+               -> setCellValue('D1', '上班')//設定D1
+               -> setCellValue('E1', "下班");//設定E1
+        // $timetable_date = PunchTime::where('date','REGEXP','-'.date('m').'-')->select('date')->distinct()->get();//distinct() 去
+        $timetable_all = PunchTime::where('date','REGEXP','-'.date('m').'-')->select('cua_id','name','date','time_clock_in','time_clock_out')->get();
+        // $tmpDateJson = json_decode($timetable_date);
         $tmpJson = json_decode($timetable_all);
         $tempNum = 2;
         for($i=0 ; $i < sizeof($timetable_all)  ; $i++){
-            $tempArray = array($tmpJson[$i]->name, $tmpJson[$i]->cua_id, $tmpJson[$i]->time_clock_in, $tmpJson[$i]->time_clock_out);
+            $tempArray = array($tmpJson[$i]->cua_id, $tmpJson[$i]->name, $tmpJson[$i]->date, $tmpJson[$i]->time_clock_in, $tmpJson[$i]->time_clock_out);
             $sheet -> fromArray($tempArray, null, 'A'.($tempNum + $i ) );
         }
-        // $sheet -> fromArray(['Eric','08:55','19:00'],null,'A2'); //以陣列去塞
-        $writer = new Xlsx($spreadSheet);
-        $writer->save('TEST_FORMARRAY.xlsx');
+        // $sheet -> fromArray(['Eric','1026','2020-04-09','08:55','19:00'],null,'A2'); //以陣列去塞
+        // $cellA2 = $sheet->getCell('A2');
+        // echo 'Value: ', $cellA2->getValue(), '; Address: ', $cellA2->getCoordinate(), PHP_EOL;
+
+        // $writer = new Xlsx($spreadSheet);
+        // ob_end_clean();
+        // $writer->save('testExcel.xlsx');
+        //  dd($writer);
+        // exit();
+
+        header('Content-Type: application/vnd.ms-excel');
+        header('Content-Disposition: attachment;filename="textExport.xls"');//設定檔名
+        header('Cache-Control: max-age=0');
+
+        $writer = \PhpOffice\PhpSpreadsheet\IOFactory::createWriter($spreadSheet, 'Xls');
+        $writer->save('php://output');
     }
 
     public function getCua(Request $request){
