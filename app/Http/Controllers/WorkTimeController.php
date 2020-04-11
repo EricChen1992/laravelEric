@@ -47,29 +47,27 @@ class WorkTimeController extends Controller
     }
 
     public function downloadExcel(Request $request){
-
         $spreadSheet = new Spreadsheet();
-        $sheet = $spreadSheet->getActiveSheet();
-        // $spreadsheet->setActiveSheetIndex(1);//設定分頁 0為第一頁
-        $spreadSheet->getActiveSheet()->setTitle('Hello12342536'); //設定分頁名稱
-
-        // $sheet -> setAutoSize(true);
-        $sheet -> freezePane('A2');//起始頭
-        $sheet -> setCellValue('A1', '姓名')//設定A1內容
-               -> setCellValue('B1', 'cua_id')//設定B1
-               -> setCellValue('C1', '日期')//設定C1
-               -> setCellValue('D1', '上班')//設定D1
-               -> setCellValue('E1', "下班");//設定E1
-        // $timetable_date = PunchTime::where('date','REGEXP','-'.date('m').'-')->select('date')->distinct()->get();//distinct() 去
-        $timetable_all = PunchTime::where('date','REGEXP','-'.date('m').'-')->select('cua_id','name','date','time_clock_in','time_clock_out')->get();
-        // $tmpDateJson = json_decode($timetable_date);
-        $tmpJson = json_decode($timetable_all);
-        $tempNum = 2;
-        for($i=0 ; $i < sizeof($timetable_all)  ; $i++){
-            $tempArray = array($tmpJson[$i]->cua_id, $tmpJson[$i]->name, $tmpJson[$i]->date, $tmpJson[$i]->time_clock_in, $tmpJson[$i]->time_clock_out);
-            $sheet -> fromArray($tempArray, null, 'A'.($tempNum + $i ) );
+        // $timetable_date = PunchTime::where('date','REGEXP','-'.date('m').'-');//取得當月表資料//distinct() 去重
+        // echo($timetable_date->get());
+        $timetable_datelist = PunchTime::where('date','REGEXP','-'.date('m').'-')
+                                        ->select('date')
+                                        ->distinct()
+                                        ->get();//當月存入的所有日期
+        for($a=0 ; $a < sizeof($timetable_datelist) ; $a++ ){//拆分每個月內容
+            $current_day = PunchTime::where('date','REGEXP','-'.date('m').'-')
+                                    ->where('date',$timetable_datelist[$a]->date)
+                                    ->select('cua_id','name','date','time_clock_in','time_clock_out')
+                                    ->get();
+            $this->setSheetFile($spreadSheet, $a, $timetable_datelist[$a]->date, $current_day);
+            // echo($timetable_datelist[$a]->date." "."<br>".sizeof($current_day)."<br>");
+            // echo($current_day."<br>");
         }
-        // $sheet -> fromArray(['Eric','1026','2020-04-09','08:55','19:00'],null,'A2'); //以陣列去塞
+
+        $spreadSheet->setActiveSheetIndex(0);
+        
+        //Json use math : whereJsonContains;
+
         // $cellA2 = $sheet->getCell('A2');
         // echo 'Value: ', $cellA2->getValue(), '; Address: ', $cellA2->getCoordinate(), PHP_EOL;
 
@@ -79,12 +77,45 @@ class WorkTimeController extends Controller
         //  dd($writer);
         // exit();
 
+        //Download xls Excel file
         header('Content-Type: application/vnd.ms-excel');
         header('Content-Disposition: attachment;filename="textExport.xls"');//設定檔名
         header('Cache-Control: max-age=0');
 
         $writer = \PhpOffice\PhpSpreadsheet\IOFactory::createWriter($spreadSheet, 'Xls');
+        ob_end_clean();//待查
         $writer->save('php://output');
+        exit();//待查
+        echo ("Check Download!");
+    }
+
+    //1.Sheet Object 2.index 3.title 4.content
+    private function setSheetFile(Spreadsheet $sSheet, $pagination_index, $pagination_title, $pagination_content){
+        echo($pagination_index."<br>".$pagination_title."<br>".$pagination_content."<br>");
+        if($pagination_index != 0) $sSheet->createSheet();
+        $sSheet->setActiveSheetIndex($pagination_index);//設定分頁 0為第一頁
+        $sSheet->getActiveSheet()->setTitle($pagination_title); //設定分頁名稱
+        $sheet = $sSheet->getActiveSheet();
+
+        // $sheet -> setAutoSize(true);
+        $sheet -> freezePane('A2');//起始頭
+        $sheet -> setCellValue('A1', 'cua_id')//設定A1內容
+               -> setCellValue('B1', '姓名')//設定B1
+               -> setCellValue('C1', '日期')//設定C1
+               -> setCellValue('D1', '上班')//設定D1
+               -> setCellValue('E1', "下班");//設定E1
+            //    -> setCellValue('F1', "備註");//設定F1
+
+        $tmpJson = json_decode($pagination_content);
+        $tempNum = 2;
+        // if(sizeof($pagination_content) > 0) $sheet->setCellValue('F2',"有人漏打卡!!!");
+        for($i=0 ; $i < sizeof($pagination_content)  ; $i++){
+            $tempArray = array($tmpJson[$i]->cua_id, $tmpJson[$i]->name, $tmpJson[$i]->date, $tmpJson[$i]->time_clock_in, $tmpJson[$i]->time_clock_out);
+            $sheet -> fromArray($tempArray, null, 'A'.($tempNum + $i ) );
+        }
+
+         
+        
     }
 
     public function getCua(Request $request){
