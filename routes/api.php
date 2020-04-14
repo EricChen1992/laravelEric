@@ -29,4 +29,4 @@ Route::any('/gettime', 'WorkTimeController@getTime');
 
 Route::any('/getUserAllData', 'WorkTimeController@getUserAllData');
 
-Route::any('/downloadExcel', 'WorkTimeController@downloadExcel');
+Route::any('/downloadExcel/{value?}', 'WorkTimeController@downloadExcel')->name('downloadexcel');

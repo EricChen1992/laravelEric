@@ -46,47 +46,83 @@ class WorkTimeController extends Controller
         echo date('Y-m-d');
     }
 
-    public function downloadExcel(Request $request){
+    public function downloadfile(){
+
+        return view('downloadfile')
+        ->with('title', 'Download Excel')
+        ->with('head','請輸入年-月')
+        ->with('content','ex:如未填值則直接下載當月')
+        ->with('button_name', 'Download');
+    }
+
+    public function downloadExcel(Request $request, $value=0){
+        if(strstr($value,'-')){
+
+            $queryValue = explode("-",$value);
+            $queryYear = $queryValue[0];
+            $queryMonth = ($queryValue[1] != 0 && $queryValue[1] <= 12) ? sprintf('%02d',$queryValue[1]) : date('m');
+            $queryData = $queryYear."-".$queryMonth;
+
+        }elseif($value == 0){
+            $queryData = date('Y-m');
+        }else{
+            echo("輸入格式錯誤");
+            return;
+        }
+        // if($month != 0 && $month <= 12){
+        //     $queryMonth = sprintf('%02d',$month);
+        // } elseif($month == 0) {
+        //     $queryMonth = date('m');
+        // } else{
+        //     return echo('請輸入正確日期');
+        // }
+        // print_r($queryMonth."<br>");
+        // return view('downloadfile');
+
         $spreadSheet = new Spreadsheet();
         // $timetable_date = PunchTime::where('date','REGEXP','-'.date('m').'-');//取得當月表資料//distinct() 去重
         // echo($timetable_date->get());
-        $timetable_datelist = PunchTime::where('date','REGEXP','-'.date('m').'-')
+        $timetable_datelist = PunchTime::where('date','REGEXP',$queryData.'-')
                                         ->select('date')
                                         ->distinct()
                                         ->get();//當月存入的所有日期
-        for($a=0 ; $a < sizeof($timetable_datelist) ; $a++ ){//拆分每個月內容
-            $current_day = PunchTime::where('date','REGEXP','-'.date('m').'-')
-                                    ->where('date',$timetable_datelist[$a]->date)
-                                    ->select('cua_id','name','date','time_clock_in','time_clock_out')
-                                    ->get();
-            $this->setSheetFile($spreadSheet, $a, $timetable_datelist[$a]->date, $current_day);
-            // echo($timetable_datelist[$a]->date." "."<br>".sizeof($current_day)."<br>");
-            // echo($current_day."<br>");
+        if($timetable_datelist->isEmpty()){
+            echo ("查無資料");
+        }else{
+            for($a=0 ; $a < sizeof($timetable_datelist) ; $a++ ){//拆分每個月內容
+                $current_day = PunchTime::where('date',$timetable_datelist[$a]->date)
+                                        ->select('cua_id','name','date','time_clock_in','time_clock_out')
+                                        ->get();
+                $this->setSheetFile($spreadSheet, $a, $timetable_datelist[$a]->date, $current_day);
+                // echo($timetable_datelist[$a]->date." "."<br>".sizeof($current_day)."<br>");
+                // echo($current_day."<br>");
+            }
+    
+            $spreadSheet->setActiveSheetIndex(0);
+            
+            //Json use math : whereJsonContains;
+    
+            // $cellA2 = $sheet->getCell('A2');
+            // echo 'Value: ', $cellA2->getValue(), '; Address: ', $cellA2->getCoordinate(), PHP_EOL;
+    
+            // $writer = new Xlsx($spreadSheet);
+            // ob_end_clean();
+            // $writer->save('testExcel.xlsx');
+            //  dd($writer);
+            // exit();
+    
+            //Download xls Excel file
+            header('Content-Type: application/vnd.ms-excel');
+            header('Content-Disposition: attachment;filename="'.$queryData.'.xls"');//設定檔名
+            header('Cache-Control: max-age=0');
+    
+            $writer = \PhpOffice\PhpSpreadsheet\IOFactory::createWriter($spreadSheet, 'Xls');
+            ob_end_clean();//待查
+            $writer->save('php://output');
+            exit();//待查
+            print_r ("Check Download!");
         }
-
-        $spreadSheet->setActiveSheetIndex(0);
         
-        //Json use math : whereJsonContains;
-
-        // $cellA2 = $sheet->getCell('A2');
-        // echo 'Value: ', $cellA2->getValue(), '; Address: ', $cellA2->getCoordinate(), PHP_EOL;
-
-        // $writer = new Xlsx($spreadSheet);
-        // ob_end_clean();
-        // $writer->save('testExcel.xlsx');
-        //  dd($writer);
-        // exit();
-
-        //Download xls Excel file
-        header('Content-Type: application/vnd.ms-excel');
-        header('Content-Disposition: attachment;filename="textExport.xls"');//設定檔名
-        header('Cache-Control: max-age=0');
-
-        $writer = \PhpOffice\PhpSpreadsheet\IOFactory::createWriter($spreadSheet, 'Xls');
-        ob_end_clean();//待查
-        $writer->save('php://output');
-        exit();//待查
-        echo ("Check Download!");
     }
 
     //1.Sheet Object 2.index 3.title 4.content
