@@ -164,8 +164,9 @@ class WorkTimeController extends Controller
         );
         $url = config('app.cuaUrl') . "api/login/service";
         $loginresult = $this->runCurl($params, $url);
-        $loginResultToTokenDecode = $this->tokenDecode($loginresult, config('app.serviceToken'));
+        $loginResultToTokenDecode = $this->tokenDecode($loginresult['data'], config('app.serviceToken'));
         $loginResultToJsonDecode = json_decode($loginResultToTokenDecode);
+
         if($loginResultToJsonDecode->status != 1){
             $responJson = json_encode(array('status'=>$loginResultToJsonDecode->status,'msg'=>$loginResultToJsonDecode->msg));
             echo $responJson;
@@ -174,31 +175,5 @@ class WorkTimeController extends Controller
             echo $loginToJsonResult;
         }
         
-    }
-
-    public static function runCurl($params, $url)
-    {
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $url);
-        curl_setopt($ch, CURLOPT_HEADER, false);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, $params);
-        $data = curl_exec($ch);
-        $httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        curl_close($ch);
-        return $data;
-    }
-
-    public function tokenDecode($content, $token) {
-        if (!empty($content) && !empty($token)) {
-            $iv = substr($token, 0, 16);
-            return openssl_decrypt(
-                str_replace (" ", "+", $content),
-                "AES-256-CBC",
-                $token,
-                0,
-                $iv
-            );
-        }       
     }
 }
