@@ -10,6 +10,11 @@ use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 class WorkTimeController extends Controller
 {
+    public function __construct(){
+
+        date_default_timezone_set('Asia/Taipei');
+    
+    }
     public function workclockin(Request $request){
 
         $timetable = new PunchTime();
